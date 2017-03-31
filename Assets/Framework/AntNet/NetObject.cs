@@ -14,9 +14,13 @@ namespace AntNet
         //超时处理
         protected Dictionary<int, MessageHead> indexDict = new Dictionary<int, MessageHead>();        //用于删除
         protected SortedList<float, MessageHead> timeoutDict = new SortedList<float, MessageHead>(); //用于计算
-
+        protected INetLayer netLayer;
         protected Action<ushort> onRecvError = (err) => { };//错误统一处理回调
 
+        public void SetNetLayer(INetLayer layer)
+        {
+            netLayer = layer;
+        }
         public void SetOnRecvError(Action<ushort> callback)
         {
             onRecvError = callback;            
@@ -68,7 +72,7 @@ namespace AntNet
 
         protected void CallBack(MessageHead head, RecvData recv)
         {
-            int key = recv.head.CmdAct;
+            int key = head.CmdAct;
             if (head.error == Error.ErrNetTimeout)
             {
                 
@@ -79,19 +83,19 @@ namespace AntNet
                 foreverCallbackDict[key](head.error, recv);
             }
 
-            if (foreverCallbackDict.ContainsKey(recv.head.cmd))
+            if (foreverCallbackDict.ContainsKey(head.cmd))
             {
-                foreverCallbackDict[recv.head.cmd](head.error, recv);
+                foreverCallbackDict[head.cmd](head.error, recv);
             }
 
-            if (indexDict.ContainsKey(recv.head.index))
+            if (indexDict.ContainsKey(head.index))
             {
-                indexDict.Remove(recv.head.index);
+                indexDict.Remove(head.index);
             }
             
-            if (onceCallbackDict.ContainsKey(recv.head.index))
+            if (onceCallbackDict.ContainsKey(head.index))
             {
-                onceCallbackDict[recv.head.index](head.error, recv);                   
+                onceCallbackDict[head.index](head.error, recv);                   
             }
            
         }
